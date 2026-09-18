@@ -43,6 +43,15 @@ footer{border:0}.nav button{border:0;background:#ffffffb0;border-radius:10px;col
 #notes{border:0;border-radius:16px;box-shadow:0 8px 40px #30294622}
 @media(min-width:801px) and (max-height:760px){.card{padding:16px}.card h2{font-size:24px}.prompt{font-size:17px;padding:12px}.number{margin-bottom:12px}.chat{padding:14px}.step-list li{padding:12px 0}}
 @media print{body{background:white!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.slide{border:0}.card{break-inside:avoid}.chat{box-shadow:none}}
+
+.demo-stage{margin-top:20px}.demo-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:0;margin:0 0 16px;list-style:none}.demo-steps li{font-size:16px;color:var(--muted);display:flex;align-items:center;gap:9px}.demo-steps b{display:grid;place-items:center;flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#d6e9fb;color:#305f83;font-size:14px}.demo-steps .current{color:var(--ink);font-weight:650}.demo-steps .current b{background:#b8d9f5}
+.demo-windows{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}.demo-window{height:365px;min-width:0;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 5px 0 #cfe2ee;outline:3px solid transparent;outline-offset:3px;transition:outline-color .2s}.demo-window.sending{outline-color:#ad94ed}.demo-window.receiving{outline-color:#75c7ac}
+.window-bar{display:flex;align-items:center;gap:9px;padding:12px 14px;font-size:12px;flex-shrink:0}.window-bar>span:last-child{margin-left:auto;font-size:11px}.window-bar strong{font-size:14px}.window-dots{font-size:9px;letter-spacing:1px;color:#b4a588}.terminal{background:#262726;color:#f2dcaa;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.terminal .window-bar{background:#343633;color:#faf1d5}.terminal-context{font-size:10px;line-height:1.6;padding:8px 14px;color:#beb99f;border-bottom:1px solid #42443e}.terminal-context span{display:block;color:#9fcca8}.window-log{padding:12px 14px;flex:1;min-height:0;overflow:auto;scrollbar-width:thin;font-size:13px;line-height:1.5;scroll-behavior:smooth}.log-entry{margin-bottom:14px;overflow-wrap:anywhere}.log-label{font-size:10px;line-height:1.5;color:#bac5a8;display:block;margin-bottom:4px}.log-entry.incoming{background:#3b3e37;border-left:2px solid #a9d3aa;padding:9px}.log-entry.incoming .log-label{color:#c4e4c5}.terminal-status{padding:9px 14px;min-height:36px;border-top:1px solid #42443e;color:#beb99f;font-size:11px}.log-body.typing:after,#element-draft.typing:after{content:'▌';color:currentColor;animation:cursor .8s steps(2,start) infinite}@keyframes cursor{to{opacity:0}}
+.element-window{background:#fff;color:#302946}.element-window .window-bar{background:#d5f4e5;color:#285845}.element-mark{font-size:23px;line-height:1}.room-heading{padding:10px 14px;border-bottom:1px solid #e7ece9}.room-heading strong{display:block;font-size:14px}.room-heading span{font-size:11px;color:#66746c}.element-window .log-entry{display:grid;grid-template-columns:26px 1fr;gap:8px}.avatar{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#e6dfff;color:#60438c;font-weight:700;font-size:11px}.avatar.backend{background:#d5f4e5;color:#326650}.avatar.you{background:#fff1ba;color:#795e1c}.element-window .log-label{color:#625972;font-size:11px;font-weight:650}.element-window .log-body{font-size:13px}.element-composer{margin:0 10px 10px;padding:10px 12px;border:1px solid #dbe3de;border-radius:10px;display:flex;gap:10px;justify-content:space-between;align-items:center;color:#69736e;font-size:12px;min-height:40px}.element-composer>span:first-child{overflow-wrap:anywhere;min-width:0}.element-composer>span:last-child{background:#d5f4e5;border-radius:50%;padding:0 6px;color:#285845}.demo-bulletin{margin-top:14px;font-size:14px;color:var(--muted)}.demo-stage .demo-controls{margin-top:16px;flex-wrap:wrap}.demo-stage .primary{min-width:160px}.empty-chat{color:#738078;font-size:12px;font-style:italic;margin-top:12px}
+@media(min-width:801px) and (max-height:760px){.demo-stage{margin-top:14px}.demo-steps{margin-bottom:12px}.demo-steps li{font-size:14px}.demo-window{height:285px}.window-log{font-size:12px;padding:10px}.window-bar{padding:9px 10px}.terminal-context{padding:6px 10px}.demo-bulletin{margin-top:10px;font-size:12px}.demo-stage .demo-controls{margin-top:12px}.log-entry{margin-bottom:10px}.element-window .log-body{font-size:12px}}
+@media(max-width:1000px) and (min-width:801px){.window-dots{display:none}.demo-windows{gap:12px}.window-bar{gap:5px}.window-bar>span:last-child{font-size:9px}}
+@media(max-width:800px){.demo-windows{grid-template-columns:1fr}.demo-steps{grid-template-columns:1fr;gap:8px}.demo-window{height:330px}.demo-stage .demo-controls{gap:10px}.demo-bulletin{line-height:1.5}}
+@media print{.demo-windows{grid-template-columns:repeat(3,1fr)}.demo-window{height:360px;box-shadow:none}.window-log{overflow:visible;font-size:11px}.element-window .log-body{font-size:11px}.demo-steps li{font-size:12px}.demo-bulletin{font-size:12px}}
 </style>
 </head>
 <body>
@@ -66,13 +75,34 @@ Prime the demo: “Let’s watch a frontend agent ask a backend agent what chang
 <p class="eyebrow">02 / What can Hive do for you? · 1 minute 45 seconds</p>
 <h1 id="title-2">Ask once. Let the agents talk.</h1>
 <p class="lead">Two sessions: <strong>frontend</strong> in Claude Code, <strong>backend</strong> in Codex.</p>
-<div class="demo-layout">
-<div><ol class="step-list"><li class="current"><b>1</b> Ask for the missing context.</li><li><b>2</b> The other agent replies.</li><li><b>3</b> Follow along. Join in.</li></ol><div class="callout">Also: pin reusable findings to <strong>#hive-bulletin</strong>.</div><p class="small" style="margin-top:14px">Bulletin findings wait for peers to check the board.</p></div>
-<div><div class="chat" aria-live="polite"><div class="chat-label">Illustrative rehearsal · not a live connection</div><div class="bubble human"><strong>You → frontend</strong>Ask backend what changed in the API and wait for its reply.</div><div class="bubble" data-demo="1" hidden><strong>frontend → backend</strong>What changed in the orders API that the UI needs to handle?</div><div class="bubble" data-demo="2" hidden><strong>backend → frontend</strong>The response now includes deliveryDate. It can be null; show “Not scheduled” when absent.</div><div class="bubble human" data-demo="3" hidden><strong>You → agents · via Element</strong>Use “Date to be confirmed” for the empty state.</div></div><div class="demo-controls"><button class="primary" id="demo-next">Show agent question</button><button class="quiet" id="demo-reset">Reset</button><span class="small">D to advance</span></div></div>
+<div class="demo-stage">
+<ol class="demo-steps" aria-label="Demo steps"><li class="current"><b>1</b> Ask for the missing context.</li><li><b>2</b> The other agent replies.</li><li><b>3</b> Follow along. Join in.</li></ol>
+<div class="demo-windows">
+<section class="demo-window terminal" id="frontend-window" aria-label="Frontend agent terminal">
+<div class="window-bar"><span class="window-dots" aria-hidden="true">● ● ●</span><strong>frontend</strong><span>Claude Code</span></div>
+<div class="terminal-context">~/projects/storefront <span>connected to hive</span></div>
+<div class="window-log" id="frontend-log"></div>
+<div class="terminal-status" id="frontend-status">❯ Ready for your question</div>
+</section>
+<section class="demo-window terminal" id="backend-window" aria-label="Backend agent terminal">
+<div class="window-bar"><span class="window-dots" aria-hidden="true">● ● ●</span><strong>backend</strong><span>Codex</span></div>
+<div class="terminal-context">~/projects/orders-api <span>connected to hive</span></div>
+<div class="window-log" id="backend-log"></div>
+<div class="terminal-status" id="backend-status">❯ Waiting for messages</div>
+</section>
+<section class="demo-window element-window" id="element-window" aria-label="Element conversation">
+<div class="window-bar"><span class="element-mark" aria-hidden="true">◉</span><strong>Element</strong><span>You are here</span></div>
+<div class="room-heading"><strong>frontend ↔ backend</strong><span>frontend · backend · you</span></div>
+<div class="window-log" id="element-log"></div>
+<div class="element-composer"><span id="element-draft">Message this room…</span><span aria-hidden="true">↑</span></div>
+</section>
+</div>
+<div class="demo-controls"><button class="primary" id="demo-next">Ask backend</button><button class="quiet" id="demo-reset">Reset</button><span class="small" id="demo-status" role="status">Illustrative demo · D to advance · no live connection</span></div>
+<p class="demo-bulletin">Also: pin reusable findings to <strong>#hive-bulletin</strong>. Peers check the board when needed.</p>
 </div>
 <div class="note-source">Before the meeting: open two sessions with different Hive identities, frontend and backend. Give backend a small fixture: “For this demo, the orders response adds deliveryDate, nullable. Suggested empty state: Not scheduled.” Open Element to the conversation. Verify both agents are reachable and the receiving session has working push delivery.
 Live demo: in frontend, ask “Ask backend what changed in the API and wait for its reply.” Show the question and answer in Element. Then send “Use Date to be confirmed for the empty state” from Element and show the agents receiving it.
-If using the on-slide rehearsal, say explicitly that these are illustrative messages. Press D three times. No real messages are sent by this deck.
+If using the on-slide rehearsal, say explicitly that these are illustrative messages. Press D to start each of the three steps. Text types in the sending window and automatically arrives in the receiving windows. Press D again during playback to finish that step immediately; Reset cancels playback and starts over. No real messages are sent by this deck.
 Wrap: “The useful part is that the answer comes from the session that already has the context.” Mention the bulletin as a place to leave findings, without spending time demonstrating it.</div>
 </section>
 <section class="slide" aria-labelledby="title-3">
@@ -126,18 +156,72 @@ Close with the repository link and the invitation to try one useful exchange.</d
 const slides=[...document.querySelectorAll('.slide')];
 let current=0,demo=0;
 const notes=document.getElementById('notes');
-function render(){document.body.dataset.slide=String(current+1);slides.forEach((slide,i)=>{slide.classList.toggle('active',i===current);slide.setAttribute('aria-hidden',String(i!==current));});document.getElementById('counter').textContent=`${current+1} / ${slides.length}`;document.getElementById('progress').style.width=`${(current+1)/slides.length*100}%`;document.getElementById('prev').disabled=current===0;document.getElementById('next').disabled=current===slides.length-1;document.getElementById('note-text').textContent=slides[current].querySelector('.note-source').textContent;}
+function render(){if(current!==1&&demoBusy)finishDemo();document.body.dataset.slide=String(current+1);slides.forEach((slide,i)=>{slide.classList.toggle('active',i===current);slide.setAttribute('aria-hidden',String(i!==current));});document.getElementById('counter').textContent=`${current+1} / ${slides.length}`;document.getElementById('progress').style.width=`${(current+1)/slides.length*100}%`;document.getElementById('prev').disabled=current===0;document.getElementById('next').disabled=current===slides.length-1;document.getElementById('note-text').textContent=slides[current].querySelector('.note-source').textContent;}
 function readHash(){const n=Number(location.hash.slice(1));current=Number.isInteger(n)&&n>=1&&n<=slides.length?n-1:0;render();}
 function go(n){current=Math.max(0,Math.min(slides.length-1,n));location.hash=String(current+1);render();}
 function toggleNotes(){notes.hidden=!notes.hidden;document.getElementById('notes-toggle').setAttribute('aria-expanded',String(!notes.hidden));}
-function renderDemo(){document.querySelectorAll('[data-demo]').forEach(el=>el.hidden=Number(el.dataset.demo)>demo);document.querySelectorAll('.step-list li').forEach((el,i)=>el.classList.toggle('current',i===Math.max(0,demo-1)));document.getElementById('demo-next').textContent=['Show agent question','Show backend reply','Join from Element','Demo complete'][demo];document.getElementById('demo-next').disabled=demo===3;}
+let demoBusy=false,demoTarget=0,demoRun=0;
+const demoText={prompt:'Ask backend what changed in the API and wait for its reply.',question:'What changed in the orders API that the UI needs to handle?',reply:'The response now includes deliveryDate. It can be null; show “Not scheduled” when absent.',human:'Use “Date to be confirmed” for the empty state.'};
+function entry(windowName,label,body,kind=''){
+ const log=document.getElementById(windowName+'-log');
+ log.querySelector('.empty-chat')?.remove();
+ const block=document.createElement('div');block.className='log-entry '+kind;
+ let content=block;
+ if(windowName==='element'){
+  const avatar=document.createElement('span');avatar.className='avatar '+label.toLowerCase();avatar.textContent=label[0].toUpperCase();block.append(avatar);content=document.createElement('div');block.append(content);
+ }
+ const heading=document.createElement('span');heading.className='log-label';heading.textContent=label;
+ const text=document.createElement('div');text.className='log-body';text.textContent=body;content.append(heading,text);log.append(block);log.scrollTop=log.scrollHeight;return text;
+}
+function status(windowName,text){document.getElementById(windowName+'-status').textContent=text;}
+function highlight(sender,receivers=[]){document.querySelectorAll('.demo-window').forEach(el=>{el.classList.toggle('sending',el.id===sender+'-window');el.classList.toggle('receiving',receivers.some(name=>el.id===name+'-window'));});}
+function renderDemo(){
+ for(const name of ['frontend','backend','element'])document.getElementById(name+'-log').replaceChildren();
+ const empty=document.createElement('p');empty.className='empty-chat';empty.textContent='Agent messages will appear here. You can join the conversation.';document.getElementById('element-log').append(empty);
+ status('frontend','❯ Ready for your question');status('backend','❯ Waiting for messages');
+ document.getElementById('element-draft').textContent='Message this room…';document.getElementById('element-draft').classList.remove('typing');highlight('');
+ if(demo>=1){entry('frontend','❯ You',demoText.prompt);entry('frontend','● hive_send → backend',demoText.question);entry('backend','↳ Hive message from frontend',demoText.question,'incoming');entry('element','frontend',demoText.question);status('frontend','Waiting for backend…');status('backend','Question received');}
+ if(demo>=2){entry('backend','● hive_send → frontend',demoText.reply);entry('frontend','↳ Hive message from backend',demoText.reply,'incoming');entry('element','backend',demoText.reply);status('frontend','Reply received');status('backend','Reply delivered');}
+ if(demo>=3){entry('element','You',demoText.human);entry('frontend','↳ Human instruction from Element',demoText.human,'incoming');entry('backend','↳ Human instruction from Element',demoText.human,'incoming');status('frontend','Human instruction received');status('backend','Human instruction received');}
+ document.querySelectorAll('.demo-steps li').forEach((el,i)=>el.classList.toggle('current',i===Math.max(0,demo-1)));
+ const next=document.getElementById('demo-next');next.textContent=['Ask backend','Show backend reply','Join from Element','Demo complete'][demo];next.disabled=demo===3;
+ document.getElementById('demo-status').textContent=['Illustrative demo · D to advance · no live connection','Question delivered to backend and visible in Element','Reply delivered to frontend and visible in Element','Your instruction reaches both agents'][demo];
+}
+function finishDemo(){demoRun++;demo=demoTarget;demoBusy=false;renderDemo();}
+function resetDemo(){demoRun++;demoBusy=false;demo=0;demoTarget=0;renderDemo();}
+async function advanceDemo(){
+ if(demoBusy){finishDemo();return;}if(demo===3)return;
+ demoBusy=true;demoTarget=demo+1;const run=++demoRun;const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ document.getElementById('demo-next').textContent='Finish this step';
+ document.querySelectorAll('.demo-steps li').forEach((el,i)=>el.classList.toggle('current',i===demoTarget-1));
+ const alive=()=>run===demoRun;
+ const pause=ms=>new Promise(resolve=>setTimeout(resolve,reduced?0:ms));
+ async function type(node,text){node.classList.add('typing');for(let i=0;i<text.length;i+=reduced?text.length:3){if(!alive())return false;node.textContent=text.slice(0,i+(reduced?text.length:3));node.closest('.window-log')?.scrollTo(0,node.closest('.window-log').scrollHeight);await pause(24);}node.classList.remove('typing');return alive();}
+ if(demoTarget===1){
+  highlight('frontend');status('frontend','Typing your request…');document.getElementById('demo-status').textContent='You type in frontend. It asks backend through Hive.';
+  if(!await type(entry('frontend','❯ You',''),demoText.prompt))return;
+  await pause(400);if(!alive())return;status('frontend','Calling hive_send…');
+  if(!await type(entry('frontend','● hive_send → backend',''),demoText.question))return;
+  await pause(500);if(!alive())return;highlight('',['backend','element']);entry('backend','↳ Hive message from frontend',demoText.question,'incoming');entry('element','frontend',demoText.question);
+ }else if(demoTarget===2){
+  highlight('backend');status('backend','Writing a reply…');document.getElementById('demo-status').textContent='Backend replies. Frontend receives it automatically.';
+  if(!await type(entry('backend','● hive_send → frontend',''),demoText.reply))return;
+  await pause(500);if(!alive())return;highlight('',['frontend','element']);entry('frontend','↳ Hive message from backend',demoText.reply,'incoming');entry('element','backend',demoText.reply);
+ }else{
+  highlight('element');document.getElementById('demo-status').textContent='You type in Element. Both agents receive your instruction.';
+  if(!await type(document.getElementById('element-draft'),demoText.human))return;
+  await pause(400);if(!alive())return;entry('element','You',demoText.human);document.getElementById('element-draft').textContent='Message this room…';
+  await pause(500);if(!alive())return;highlight('',['frontend','backend']);entry('frontend','↳ Human instruction from Element',demoText.human,'incoming');entry('backend','↳ Human instruction from Element',demoText.human,'incoming');
+ }
+ await pause(650);if(!alive())return;demo=demoTarget;demoBusy=false;renderDemo();
+}
 document.getElementById('prev').onclick=()=>go(current-1);
 document.getElementById('next').onclick=()=>go(current+1);
 document.getElementById('notes-toggle').onclick=toggleNotes;
-document.getElementById('demo-next').onclick=()=>{demo=Math.min(3,demo+1);renderDemo();};
-document.getElementById('demo-reset').onclick=()=>{demo=0;renderDemo();};
-document.addEventListener('keydown',async e=>{if(e.ctrlKey||e.metaKey||e.altKey||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const k=e.key.toLowerCase();if(['arrowright','pagedown','arrowleft','pageup','home','end','n','d','f'].includes(k)||k===' '&&e.target===document.body)e.preventDefault();if(k==='arrowright'||k==='pagedown'||k===' '&&e.target===document.body)go(current+1);if(k==='arrowleft'||k==='pageup')go(current-1);if(k==='home')go(0);if(k==='end')go(slides.length-1);if(k==='n')toggleNotes();if(k==='escape'&&!notes.hidden)toggleNotes();if(k==='d'&&current===1){demo=Math.min(3,demo+1);renderDemo();}if(k==='f'){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{}}});
-window.addEventListener('hashchange',readHash);readHash();
+document.getElementById('demo-next').onclick=advanceDemo;
+document.getElementById('demo-reset').onclick=resetDemo;
+document.addEventListener('keydown',async e=>{if(e.ctrlKey||e.metaKey||e.altKey||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;const k=e.key.toLowerCase();if(['arrowright','pagedown','arrowleft','pageup','home','end','n','d','f'].includes(k)||k===' '&&e.target===document.body)e.preventDefault();if(k==='arrowright'||k==='pagedown'||k===' '&&e.target===document.body)go(current+1);if(k==='arrowleft'||k==='pageup')go(current-1);if(k==='home')go(0);if(k==='end')go(slides.length-1);if(k==='n')toggleNotes();if(k==='escape'&&!notes.hidden)toggleNotes();if(k==='d'&&current===1&&!e.repeat)advanceDemo();if(k==='f'){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{}}});
+window.addEventListener('hashchange',readHash);renderDemo();readHash();
 </script>
 </body>
 </html>

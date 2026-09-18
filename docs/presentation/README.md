@@ -2,12 +2,12 @@
 
 Open `index.html` directly in a browser. It is self-contained and requires no server, network, build step, or third-party assets. External repository links need network access.
 
-Five slides: four presentation sections timed to five minutes, followed by one to two minutes of Q&A. Use arrow keys to navigate, **D** to advance the illustrative demo on slide 2, **N** for speaker notes, and **F** for fullscreen. Notes appear on the same screen; close them before screen sharing. Hash links such as `index.html#3` open a specific slide. Browser printing renders all slides, including all illustrative demo messages.
+Five slides: four presentation sections timed to five minutes, followed by one to two minutes of Q&A. Use arrow keys to navigate, **D** to advance the three-window illustrative demo on slide 2 (press again during playback to finish the step immediately), **N** for speaker notes, and **F** for fullscreen. Notes appear on the same screen; close them before screen sharing. Hash links such as `index.html#3` open a specific slide. Browser printing renders all slides, including all illustrative demo messages.
 
 ## Before presenting
 
 - Rehearse once with the notes open. Timings: takeaways 0:45, demo 1:45, setup 1:10, architecture 1:20.
-- Choose either the built-in illustrative rehearsal or a live exchange. The deck never connects to Hive or sends messages.
+- Choose either the built-in illustrative rehearsal or a live exchange. The deck never connects to Hive or sends messages. Its terminal and Element windows animate fictional messages; Reset cancels playback. Reduced-motion preferences skip typing animation.
 - For a live demo, connect two sessions with distinct identities, `frontend` and `backend`, and open their conversation in Element. Verify delivery, including while idle.
 - Give `backend` this demo fixture: “The orders API response adds deliveryDate, nullable. Suggested empty state: Not scheduled.”
 - Ask `frontend`: “Ask backend what changed in the API and wait for its reply.” Show the exchange in Element, then send: “Use Date to be confirmed for the empty state.”
