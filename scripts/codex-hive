@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+socket="${CODEX_HOME:-$HOME/.codex}/app-server-control/app-server-control.sock"
+codex_bin="${CODEX_HOME:-$HOME/.codex}/packages/standalone/current/codex"
+if [[ ! -x "$codex_bin" ]]; then
+    echo "Standalone Codex unavailable: $codex_bin" >&2
+    echo 'Install with: curl -fsSL https://chatgpt.com/codex/install.sh | sh' >&2
+    exit 1
+fi
+if [[ ! -S "$socket" ]]; then
+    "$codex_bin" app-server daemon start
+fi
+exec "$codex_bin" --remote "unix://$socket" "$@"

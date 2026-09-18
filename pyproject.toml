@@ -1,0 +1,45 @@
+[project]
+name = "claude-hive"
+version = "0.1.0"
+description = "Inter-session messaging for Claude Code via a local Matrix homeserver"
+readme = "README.md"
+license = { text = "WTFPL" }
+authors = [{ name = "Srihari Kookal", email = "srih4ri@gmail.com" }]
+requires-python = ">=3.11"
+dependencies = [
+    # mcp 2.x dropped the lowlevel Server.list_tools/call_tool decorators
+    # mcp_server.py is built on; porting is a separate change.
+    "mcp>=1.27,<2",
+    "httpx>=0.27",
+    "websockets>=15,<16",
+]
+
+[project.scripts]
+claude-hive-server = "claude_hive.mcp_server:main"
+claude-hive-hook = "claude_hive.hook:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claude_hive"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]
+

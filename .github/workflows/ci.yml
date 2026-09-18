@@ -1,0 +1,21 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.13"
+      # --frozen: install exactly what uv.lock pins and fail if it is stale,
+      # so CI cannot silently resolve a different (or breaking) dependency
+      # than the one contributors install
+      - run: uv sync --group dev --frozen
+      - run: uv run --frozen ruff check .
+      - run: uv run --frozen pytest

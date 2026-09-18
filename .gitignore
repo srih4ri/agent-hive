@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.uv/
+dist/
+build/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.env
+.DS_Store
+.codex/hooks.json
+
+# Tauri desktop shell — shelved on branch desktop-tauri-spike
+desktop/
+node_modules/
+target/
