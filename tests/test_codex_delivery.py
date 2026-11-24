@@ -102,7 +102,7 @@ def test_retry_preserves_batch_and_checkpoint(tmp_path, monkeypatch):
     backend = type("Backend", (), {})()
     backend.checkpoint_file = lambda: checkpoint
     backend.delivery_mode = "codex-app-server"
-    backend.owns_session_state = lambda: checkpoint.read_text() == "before"
+    backend.owns_delivery = lambda: checkpoint.read_text() == "before"
     backend.sync_once = AsyncMock(return_value=([message], "after"))
     backend.mark_read = AsyncMock()
     attempts = []
@@ -129,7 +129,7 @@ def test_failed_claude_delivery_preserves_checkpoint(tmp_path, monkeypatch):
     checkpoint.write_text("before")
     backend = type("Backend", (), {})()
     backend.checkpoint_file = lambda: checkpoint
-    backend.owns_session_state = lambda: True
+    backend.owns_delivery = lambda: True
     backend.sync_once = AsyncMock(return_value=([{"from": "codex", "body": "hi", "id": "1"}], "after"))
     modes = []
     backend.set_delivery_mode = modes.append
@@ -167,3 +167,58 @@ def test_unix_websocket_handshake_and_probe(tmp_path):
         assert [r["method"] for r in requests] == [
             "initialize", "initialized", "thread/loaded/list", "thread/read"]
     asyncio.run(scenario())
+
+
+def test_empty_checkpoint_rebaselines_instead_of_full_sync(tmp_path, monkeypatch):
+    from claude_hive import socket_delivery
+    checkpoint = tmp_path / "checkpoint"
+    checkpoint.write_text("")
+    backend = type("Backend", (), {})()
+    backend.checkpoint_file = lambda: checkpoint
+    backend.owns_delivery = lambda: checkpoint.read_text() == ""
+    backend.baseline_token = AsyncMock(return_value="head")
+    backend.sync_once = AsyncMock()
+    deliver = AsyncMock()
+    monkeypatch.setattr(mcp_server, "_state", mcp_server.ConnState(matrix=backend))
+    monkeypatch.setattr(socket_delivery, "deliver", deliver)
+    asyncio.run(mcp_server._delivery_loop(socket_delivery.InboxSocket("/tmp/c.sock")))
+    assert checkpoint.read_text() == "head"
+    backend.sync_once.assert_not_awaited()
+    deliver.assert_not_awaited()
+
+
+def test_superseded_agent_stops_before_delivering(tmp_path, monkeypatch):
+    from claude_hive import socket_delivery
+    checkpoint = tmp_path / "checkpoint"
+    checkpoint.write_text("before")
+    owner = iter([True, False])
+    backend = type("Backend", (), {})()
+    backend.checkpoint_file = lambda: checkpoint
+    backend.owns_delivery = lambda: next(owner, False)
+    backend.sync_once = AsyncMock(return_value=([{"from": "x", "body": "hi", "id": "1"}], "after"))
+    deliver = AsyncMock()
+    monkeypatch.setattr(mcp_server, "_state", mcp_server.ConnState(matrix=backend))
+    monkeypatch.setattr(socket_delivery, "deliver", deliver)
+    asyncio.run(mcp_server._delivery_loop(socket_delivery.InboxSocket("/tmp/c.sock")))
+    deliver.assert_not_awaited()
+    assert checkpoint.read_text() == "before"
+
+
+def test_instant_empty_syncs_are_throttled(tmp_path, monkeypatch):
+    from claude_hive import socket_delivery
+    checkpoint = tmp_path / "checkpoint"
+    checkpoint.write_text("7601099")
+    rounds = iter([True, True, True, False])
+    backend = type("Backend", (), {})()
+    backend.checkpoint_file = lambda: checkpoint
+    backend.owns_delivery = lambda: next(rounds, False)
+    backend.sync_once = AsyncMock(return_value=([], "7601099"))
+    sleeps = []
+
+    async def fake_sleep(seconds):
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(mcp_server, "_state", mcp_server.ConnState(matrix=backend))
+    monkeypatch.setattr(mcp_server.asyncio, "sleep", fake_sleep)
+    asyncio.run(mcp_server._delivery_loop(socket_delivery.InboxSocket("/tmp/c.sock")))
+    assert len(sleeps) == 1 and 0 < sleeps[0] <= mcp_server.DELIVERY_MIN_EMPTY_SYNC_SECONDS

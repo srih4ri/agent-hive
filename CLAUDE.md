@@ -85,6 +85,21 @@ breaking one is usually silent.
   hook must not double-drain the shared checkpoint while the server pushes
   to the socket — but if that pid is gone, the server died without resetting
   the flag and the hook takes delivery back rather than stranding mail.
+- **Only the newest session of an agent drains.** Sessions of one agent
+  share the checkpoint, but `by-session` supersession is per session id, so
+  a crashed-but-alive session and its replacement both kept draining. Connect
+  writes `delivery-owner/<sync_key>`; the server loop (`owns_delivery`) and
+  the hook both stand down when it names another session. Disconnect
+  releases it only if it is still ours.
+- **Checkpoint writes are atomic and an empty checkpoint is never "since
+  nothing".** `write_text` truncates first; a concurrent reader saw `""`,
+  synced without `since`, and pushed every room's recent history (~265
+  messages per hit). Writes go through `write_atomic` (temp + `os.replace`),
+  and a missing or empty checkpoint is rebaselined to the timeline head
+  without delivering anything.
+- **Instant empty syncs are throttled to one per second.** Two devices of
+  one account long-polling made Continuwuity return empty syncs immediately
+  (~45/s per server); the floor keeps any such wake-up loop cheap.
 
 - **Message-economy guidance lives in `INSTRUCTIONS` and the `hive_send`
   description, not only in skills.** Most agent-to-agent replies are sent

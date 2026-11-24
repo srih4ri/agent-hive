@@ -35,6 +35,7 @@ from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 
 from claude_hive import codex_delivery, registry, socket_delivery
+from claude_hive import hook as hook_helpers
 from claude_hive import matrix as hive_matrix
 from claude_hive.hook import ancestor_pids, code_version, comm_of, matrix_account, zellij_tab_name
 from claude_hive.hook import render as render_messages
@@ -228,6 +229,7 @@ async def _stop_heartbeat() -> None:
 
 DELIVERY_SYNC_TIMEOUT_MS = 25_000
 DELIVERY_RETRY_SECONDS = 5.0
+DELIVERY_MIN_EMPTY_SYNC_SECONDS = 1.0
 
 
 async def _delivery_loop(inbox: socket_delivery.InboxSocket | codex_delivery.CodexInbox) -> None:
@@ -236,27 +238,37 @@ async def _delivery_loop(inbox: socket_delivery.InboxSocket | codex_delivery.Cod
     Claude failures hand delivery back to hooks. Codex failures retain the
     same batch and retry with fresh runtime state, preserving invite backfill.
     Only accepted batches advance the shared checkpoint; ambiguous transport
-    failures may duplicate delivery. Superseded servers stop before sending.
+    failures may duplicate delivery. Superseded servers stop before sending,
+    including when a newer session has connected as the same agent.
     """
     backend = _state.matrix
     checkpoint = backend.checkpoint_file()
-    while backend.owns_session_state():
+    loop = asyncio.get_running_loop()
+    while backend.owns_delivery():
+        since = hook_helpers.read_checkpoint(checkpoint)
         try:
-            since = checkpoint.read_text().strip() or None
-        except OSError:
-            since = None
-        try:
+            if since is None:
+                log.warning("checkpoint %s missing or empty — rebaselining "
+                            "without delivering history", checkpoint)
+                hook_helpers.write_atomic(checkpoint, await backend.baseline_token())
+                continue
+            started = loop.time()
             messages, next_batch = await backend.sync_once(
                 since, timeout_ms=DELIVERY_SYNC_TIMEOUT_MS)
         except (hive_matrix.MatrixError, httpx.HTTPError, OSError) as exc:
             log.warning("delivery sync error (retrying): %s", exc)
             await asyncio.sleep(DELIVERY_RETRY_SECONDS)
             continue
-        if not backend.owns_session_state():
-            return
+        if not backend.owns_delivery():
+            break
+        if not messages:
+            idle = DELIVERY_MIN_EMPTY_SYNC_SECONDS - (loop.time() - started)
+            if idle > 0:
+                await asyncio.sleep(idle)
         if messages:
             while True:
-                if not backend.owns_session_state():
+                if not backend.owns_delivery():
+                    log.info("delivery handed to a newer session — stopping")
                     return
                 try:
                     adapter = codex_delivery if isinstance(inbox, codex_delivery.CodexInbox) else socket_delivery
@@ -277,8 +289,8 @@ async def _delivery_loop(inbox: socket_delivery.InboxSocket | codex_delivery.Cod
             for room, event in latest.items():
                 await backend.mark_read(room, event)
         if next_batch:
-            checkpoint.parent.mkdir(parents=True, exist_ok=True)
-            checkpoint.write_text(next_batch)
+            hook_helpers.write_atomic(checkpoint, next_batch)
+    log.info("delivery handed to a newer session — stopping")
 
 
 async def _stop_delivery() -> None:

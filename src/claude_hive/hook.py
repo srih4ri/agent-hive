@@ -126,6 +126,37 @@ def matrix_dir() -> Path:
     return Path(os.environ.get("CLAUDE_HIVE_MATRIX_DIR", Path.home() / ".claude-hive" / "matrix"))
 
 
+def write_atomic(path: Path, text: str) -> None:
+    """Replace path in one step, so a concurrent reader never sees it
+    truncated."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp.write_text(text)
+    os.replace(tmp, path)
+
+
+def read_checkpoint(path: Path) -> str | None:
+    """The stored sync token, or None when the file is missing or empty."""
+    try:
+        return path.read_text().strip() or None
+    except OSError:
+        return None
+
+
+def delivery_owner_file(sync_key: str) -> Path:
+    return matrix_dir() / "delivery-owner" / sync_key
+
+
+def owns_agent_delivery(sync_key: str, session_id: str) -> bool:
+    """False once a newer session has connected as the same agent and
+    claimed its shared checkpoint. No owner recorded means no contest."""
+    try:
+        owner = json.loads(delivery_owner_file(sync_key).read_text()).get("session_id")
+    except (OSError, ValueError, AttributeError):
+        return True
+    return owner in (None, session_id)
+
+
 GENERIC_TAB_NAME = re.compile(r"^tab\s*#?\d+$", re.IGNORECASE)
 
 
@@ -283,9 +314,15 @@ def messages_from_sync(sync: dict, my_user_id: str) -> list[dict]:
 def drain_matrix(session_id: str, account: dict) -> list[dict]:
     token = account["access_token"]
     checkpoint = matrix_dir() / "sync" / account.get("sync_key", session_id)
-    since = checkpoint.read_text().strip() if checkpoint.exists() else None
-    qs = "/sync?timeout=0" + (f"&since={urllib.parse.quote(since)}" if since else "")
-    sync = _matrix_get(f"/_matrix/client/v3{qs}", token)
+    since = read_checkpoint(checkpoint)
+    if since is None:
+        sync = _matrix_get("/_matrix/client/v3/sync?timeout=0", token)
+        if sync.get("next_batch"):
+            write_atomic(checkpoint, sync["next_batch"])
+        log_line(f"no checkpoint at {checkpoint} — rebaselined without delivering history")
+        return []
+    sync = _matrix_get(f"/_matrix/client/v3/sync?timeout=0&since={urllib.parse.quote(since)}",
+                       token)
 
     messages = messages_from_sync(sync, account["user_id"])
     for room_id in (sync.get("rooms", {}).get("invite", {}) or {}):
@@ -308,9 +345,8 @@ def drain_matrix(session_id: str, account: dict) -> list[dict]:
         except (OSError, ValueError) as exc:
             log_line(f"matrix join/backfill failed for {room_id}: {exc!r}")
 
-    if since is None or messages or sync.get("next_batch"):
-        checkpoint.parent.mkdir(parents=True, exist_ok=True)
-        checkpoint.write_text(sync.get("next_batch", ""))
+    if sync.get("next_batch"):
+        write_atomic(checkpoint, sync["next_batch"])
     mark_read(messages, token)
     return messages
 
@@ -405,6 +441,9 @@ def main() -> None:
             return
         if socket_delivery_active(account):
             log_line(f"{event}: push delivery active — hook drain skipped")
+            return
+        if not owns_agent_delivery(account.get("sync_key", session_id), session_id):
+            log_line(f"{event}: a newer session owns this agent's delivery — hook drain skipped")
             return
         messages = drain_matrix(session_id, account)
         log_line(f"{event}: matrix user={account['user_id']} messages={len(messages)}")
