@@ -17,6 +17,7 @@ dependencies = [
 [project.scripts]
 claude-hive-server = "claude_hive.mcp_server:main"
 claude-hive-hook = "claude_hive.hook:main"
+claude-hive-prune = "claude_hive.prune:main"
 
 [dependency-groups]
 dev = [
