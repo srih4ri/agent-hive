@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 
 from claude_hive import hook
 
@@ -288,8 +289,57 @@ def test_resolve_account_falls_back_to_pane_alias(tmp_path, monkeypatch):
     _write_account(tmp_path, "registered-id")
     (tmp_path / "by-pane").mkdir()
     (tmp_path / "by-pane" / "loyal-crab~4.json").write_text(
-        '{"session_id": "registered-id"}')
+        json.dumps({"session_id": "registered-id", "pid": os.getpid()}))
     monkeypatch.setenv("HIVE_HOOK_LOG", "off")
+    sid, account = hook.resolve_account("resumed-id")
+    assert sid == "registered-id"
+    assert account["user_id"] == "@sowner:hive.local"
+
+
+def _dead_pid():
+    proc = subprocess.Popen(["true"])
+    proc.wait()
+    return proc.pid
+
+
+def test_resolve_account_drops_alias_of_dead_owner(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLAUDE_HIVE_MATRIX_DIR", str(tmp_path))
+    monkeypatch.setenv("HIVE_HOOK_LOG", "off")
+    _zellij_env(monkeypatch)
+    _write_account(tmp_path, "old-session")
+    (tmp_path / "by-pane").mkdir()
+    alias = tmp_path / "by-pane" / "loyal-crab~4.json"
+    alias.write_text(json.dumps({"session_id": "old-session", "pid": _dead_pid()}))
+    sid, account = hook.resolve_account("new-session")
+    assert (sid, account) == ("new-session", None)
+    assert not alias.exists()
+    assert (tmp_path / "by-session" / "old-session.json").exists()
+
+
+def test_resolve_account_drops_legacy_alias_without_pid(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLAUDE_HIVE_MATRIX_DIR", str(tmp_path))
+    monkeypatch.setenv("HIVE_HOOK_LOG", "off")
+    _zellij_env(monkeypatch)
+    _write_account(tmp_path, "old-session")
+    (tmp_path / "by-pane").mkdir()
+    alias = tmp_path / "by-pane" / "loyal-crab~4.json"
+    alias.write_text('{"session_id": "old-session"}')
+    sid, account = hook.resolve_account("new-session")
+    assert (sid, account) == ("new-session", None)
+    assert not alias.exists()
+
+
+def test_resolve_account_legacy_alias_uses_live_delivery_pid(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLAUDE_HIVE_MATRIX_DIR", str(tmp_path))
+    monkeypatch.setenv("HIVE_HOOK_LOG", "off")
+    _zellij_env(monkeypatch)
+    (tmp_path / "by-session").mkdir()
+    (tmp_path / "by-session" / "registered-id.json").write_text(json.dumps(
+        {"user_id": "@sowner:hive.local", "access_token": "tok",
+         "delivery": "socket", "delivery_pid": os.getpid()}))
+    (tmp_path / "by-pane").mkdir()
+    (tmp_path / "by-pane" / "loyal-crab~4.json").write_text(
+        '{"session_id": "registered-id"}')
     sid, account = hook.resolve_account("resumed-id")
     assert sid == "registered-id"
     assert account["user_id"] == "@sowner:hive.local"

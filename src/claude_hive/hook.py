@@ -199,6 +199,10 @@ def socket_delivery_active(account: dict) -> bool:
     pid = account.get("delivery_pid")
     if not isinstance(pid, int):
         return True
+    return pid_alive(pid)
+
+
+def pid_alive(pid: int) -> bool:
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
@@ -225,22 +229,31 @@ def resolve_account(session_id: str | None) -> tuple[str | None, dict | None]:
     credentials — session ids drift when a conversation is resumed after its
     MCP server registered under a different id — fall back to the by-pane
     alias hive_connect leaves when running inside zellij, and drain under the
-    alias's owning session id so each account keeps exactly one checkpoint."""
+    alias's owning session id so each account keeps exactly one checkpoint.
+    The alias is honoured only while the server process that wrote it is
+    alive; otherwise a new session reusing the pane would inherit a dead
+    session's inbox, so the stale alias is removed instead."""
     account = matrix_account(session_id)
     if account:
         return session_id, account
     key = zellij_pane_key()
     if not key:
         return session_id, None
+    alias_file = matrix_dir() / "by-pane" / f"{key}.json"
     try:
-        owner = json.loads(
-            (matrix_dir() / "by-pane" / f"{key}.json").read_text()).get("session_id")
+        alias = json.loads(alias_file.read_text())
     except (OSError, ValueError):
         return session_id, None
+    owner = alias.get("session_id")
     if not owner or owner == session_id:
         return session_id, None
     account = matrix_account(owner)
     if not account:
+        return session_id, None
+    pid = alias.get("pid", account.get("delivery_pid"))
+    if not isinstance(pid, int) or not pid_alive(pid):
+        log_line(f"pane-alias dropped: owner {owner} not running (pane {key})")
+        alias_file.unlink(missing_ok=True)
         return session_id, None
     log_line(f"pane-alias fallback: session {session_id} -> {owner} (pane {key})")
     return owner, account
