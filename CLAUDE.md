@@ -133,6 +133,15 @@ breaking one is usually silent.
   `hive.peer`, which is what makes fleet drift (long-running servers on old
   code) visible to every other session.
 
+- **Sessions that die without `hive_disconnect` stay listed as ACTIVE.**
+  `claude-hive-prune` (`prune.py`) marks entries idle past `--minutes` offline.
+  A `hive.peer` event is keyed by its user id and only that user may write it,
+  so the tool logs into each agent's own account from `accounts/` and logs the
+  device out again afterwards. Entries with no local account (another machine,
+  retired `s<hex>` sessions) are skipped. `agents.json` is not touched, so a
+  pruned agent reconnects under its old name. The threshold may not drop below
+  `PEER_STALE_SECONDS`, or live sessions between heartbeats would be pruned.
+
 ### Host and OS specifics
 
 - **Parsing `/proc/<pid>/stat`:** field 2 (`comm`) is parenthesised and may

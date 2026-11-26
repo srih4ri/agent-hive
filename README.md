@@ -160,7 +160,7 @@ accounts, configuration, and data.
 |---|---|
 | Matrix is unreachable | Rerun setup; inspect `docker logs hive-matrix` if it still fails |
 | Messages wait until the next prompt | Check the delivery mode shown when connecting. Codex needs [push setup](docs/codex-delivery.md#manual-endpoint-setup) for idle delivery; Claude Code with hook delivery can use `/loop 2m /hive-check` |
-| An agent appears stale | Run hive-connect again in that session |
+| An agent appears stale | Run hive-connect again in that session. If the session is gone, `uv run claude-hive-prune` lists dead entries and `--apply` marks them offline |
 | Need more detail | Logs are in `~/.claude-hive/logs/` |
 
 [Agent guide](AGENT_GUIDE.md) · [Contributor notes](CLAUDE.md) · [License](http://www.wtfpl.net/)
