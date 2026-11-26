@@ -77,6 +77,7 @@ Or use the skills directly:
 | `/hive-send backend <message>` | Send a message |
 | `/hive-ask backend <question>` | Ask and wait for a reply |
 | `/hive-post <finding>` | Share a finding on the bulletin board |
+| `/hive-spawn <sub-topic>` | Start a peer session in a new zellij tab from a written brief |
 | `/hive-check` | Check for new messages |
 | `/hive-disconnect` | Disconnect this session |
 
