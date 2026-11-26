@@ -10,7 +10,7 @@ only below.
   `scripts/install_claude.py` redoes just the Claude wiring.
 - Skills are available as slash commands: `/hive-connect`, `/hive-status`,
   `/hive-send`, `/hive-ask`, `/hive-post`, `/hive-check`,
-  `/hive-disconnect`. Project-level discovery also works via
+  `/hive-spawn`, `/hive-disconnect`. Project-level discovery also works via
   `.claude/skills`.
 - The connection id comes from the claude ancestor's
   `~/.claude/sessions/<pid>.json` (`sessionId` — tracks resumes), falling
