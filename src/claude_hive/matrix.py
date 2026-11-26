@@ -521,7 +521,7 @@ class MatrixBackend:
             by_pane = matrix_dir() / "by-pane"
             by_pane.mkdir(parents=True, exist_ok=True)
             (by_pane / f"{pane_key}.json").write_text(json.dumps(
-                {"session_id": self.session_id}))
+                {"session_id": self.session_id, "pid": os.getpid()}))
 
     def owns_session_state(self) -> bool:
         """False once a newer server process for this session has connected

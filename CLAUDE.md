@@ -156,6 +156,13 @@ breaking one is usually silent.
   `ZELLIJ_PANE_ID`. The `by-pane/` alias written at connect is how the hook
   still finds credentials when the session id drifts afterwards; last
   connect in a pane wins.
+- **A pane alias is honoured only while its writer is alive.** zellij reuses
+  pane ids, and a session that dies without `hive_disconnect` leaves its
+  alias behind, so a new, unconnected session in the same pane would drain
+  the dead session's inbox (and advance its checkpoint, so the mail is lost
+  to the real recipient). The alias records the server pid; the hook follows
+  it only if that pid (or, for aliases written before the pid existed, the
+  account's `delivery_pid`) is running, and deletes the alias otherwise.
 - **zellij tab names like `Tab #6` are defaults and carry no meaning** —
   never use one as an identity hint. Pane listing uses `list-panes --tab`
   rather than `current-tab-info`, which reports the *focused* tab and is
