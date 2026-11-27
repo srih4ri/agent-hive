@@ -46,3 +46,33 @@ def test_owns_session_state_tracks_by_session_token(tmp_path, monkeypatch):
     assert b.owns_session_state() is True
     f.write_text('{"access_token": "tok-newer-server"}')
     assert b.owns_session_state() is False
+
+
+def test_owns_delivery_yields_to_newer_session_of_same_agent(tmp_path, monkeypatch):
+    import json
+
+    from claude_hive import hook
+    monkeypatch.setenv("CLAUDE_HIVE_MATRIX_DIR", str(tmp_path))
+    old = MatrixBackend(None, "old-sess")
+    old.access_token, old.sync_key = "tok-old", "akey"
+    assert old.owns_delivery() is True
+    hook.write_atomic(hook.delivery_owner_file("akey"), json.dumps({"session_id": "new-sess"}))
+    assert old.owns_session_state() is True
+    assert old.owns_delivery() is False
+
+
+def test_clear_hook_state_releases_only_own_ownership(tmp_path, monkeypatch):
+    import json
+
+    from claude_hive import hook
+    monkeypatch.setenv("CLAUDE_HIVE_MATRIX_DIR", str(tmp_path))
+    monkeypatch.delenv("ZELLIJ", raising=False)
+    owner = hook.delivery_owner_file("akey")
+    old = MatrixBackend(None, "old-sess")
+    old.sync_key = "akey"
+    hook.write_atomic(owner, json.dumps({"session_id": "new-sess"}))
+    old.clear_hook_state()
+    assert owner.exists()
+    hook.write_atomic(owner, json.dumps({"session_id": "old-sess"}))
+    old.clear_hook_state()
+    assert not owner.exists()

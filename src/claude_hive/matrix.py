@@ -505,12 +505,15 @@ class MatrixBackend:
         """Hand the hook this session's credentials and make sure a sync
         checkpoint exists. An existing agent-keyed checkpoint is left alone:
         it marks where the previous session stopped draining, so mail that
-        arrived while no session was attached is delivered, not dropped."""
+        arrived while no session was attached is delivered, not dropped.
+        This session also becomes the agent's delivery owner, which makes any
+        older session still attached to the same agent stop draining."""
         checkpoint = self.checkpoint_file()
-        if not (self.sync_key and checkpoint.exists()):
-            sync = await self._call("GET", "/sync?timeout=0")
-            checkpoint.parent.mkdir(parents=True, exist_ok=True)
-            checkpoint.write_text(sync["next_batch"])
+        if not (self.sync_key and hook_helpers.read_checkpoint(checkpoint)):
+            hook_helpers.write_atomic(checkpoint, await self.baseline_token())
+        hook_helpers.write_atomic(
+            hook_helpers.delivery_owner_file(self.sync_key or self.session_id),
+            json.dumps({"session_id": self.session_id, "pid": os.getpid()}))
         by_session = matrix_dir() / "by-session"
         by_session.mkdir(parents=True, exist_ok=True)
         (by_session / f"{self.session_id}.json").write_text(json.dumps(
@@ -536,7 +539,25 @@ class MatrixBackend:
             return True
         return stored.get("access_token") == self.access_token
 
+    def owns_delivery(self) -> bool:
+        """Owns this session's state AND is the newest session attached to
+        the agent. Sessions of one agent share a checkpoint, so two drainers
+        race on it; only the latest connect may drain."""
+        return self.owns_session_state() and hook_helpers.owns_agent_delivery(
+            self.sync_key or self.session_id, self.session_id)
+
+    async def baseline_token(self) -> str:
+        """A fresh sync token at the head of the timeline, without history."""
+        sync = await self._call("GET", "/sync?timeout=0")
+        return sync["next_batch"]
+
     def clear_hook_state(self) -> None:
+        owner = hook_helpers.delivery_owner_file(self.sync_key or self.session_id)
+        try:
+            if json.loads(owner.read_text()).get("session_id") == self.session_id:
+                owner.unlink()
+        except (OSError, ValueError, AttributeError):
+            pass
         (matrix_dir() / "by-session" / f"{self.session_id}.json").unlink(missing_ok=True)
         pane_key = hook_helpers.zellij_pane_key()
         if pane_key:

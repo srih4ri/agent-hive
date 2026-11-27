@@ -360,3 +360,51 @@ def test_resolve_account_none_without_alias_or_credentials(tmp_path, monkeypatch
     monkeypatch.setenv("CLAUDE_HIVE_MATRIX_DIR", str(tmp_path))
     sid, account = hook.resolve_account("sid-x")
     assert (sid, account) == ("sid-x", None)
+
+
+def test_write_atomic_replaces_and_leaves_no_temp(tmp_path):
+    f = tmp_path / "sync" / "akey"
+    hook.write_atomic(f, "100")
+    hook.write_atomic(f, "200")
+    assert f.read_text() == "200"
+    assert [p.name for p in f.parent.iterdir()] == ["akey"]
+
+
+def test_read_checkpoint_treats_empty_as_missing(tmp_path):
+    f = tmp_path / "akey"
+    assert hook.read_checkpoint(f) is None
+    f.write_text("  \n")
+    assert hook.read_checkpoint(f) is None
+    f.write_text("7601099\n")
+    assert hook.read_checkpoint(f) == "7601099"
+
+
+def test_owns_agent_delivery_follows_latest_connect(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLAUDE_HIVE_MATRIX_DIR", str(tmp_path))
+    assert hook.owns_agent_delivery("akey", "old")
+    hook.write_atomic(hook.delivery_owner_file("akey"), json.dumps({"session_id": "old"}))
+    assert hook.owns_agent_delivery("akey", "old")
+    hook.write_atomic(hook.delivery_owner_file("akey"), json.dumps({"session_id": "new"}))
+    assert not hook.owns_agent_delivery("akey", "old")
+    assert hook.owns_agent_delivery("akey", "new")
+
+
+def test_drain_rebaselines_empty_checkpoint_without_history(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLAUDE_HIVE_MATRIX_DIR", str(tmp_path))
+    checkpoint = tmp_path / "sync" / "akey"
+    checkpoint.parent.mkdir()
+    checkpoint.write_text("")
+    history = {"next_batch": "900", "rooms": {"join": {"!r": {"timeline": {"events": [
+        {"type": "m.room.message", "sender": "@other:hive.local", "event_id": "$old",
+         "content": {"msgtype": "m.text", "body": "old news"}}]}}}}}
+    paths = []
+
+    def fake_get(path, token):
+        paths.append(path)
+        return history
+
+    monkeypatch.setattr(hook, "_matrix_get", fake_get)
+    account = {"access_token": "t", "user_id": "@me:hive.local", "sync_key": "akey"}
+    assert hook.drain_matrix("sess", account) == []
+    assert checkpoint.read_text() == "900"
+    assert paths == ["/_matrix/client/v3/sync?timeout=0"]
